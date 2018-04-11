@@ -1,0 +1,529 @@
+---
+title: "2.3.8 ニューラルネットワーク"
+author: '@nozma'
+date: "2018/4/12"
+output:
+  revealjs::revealjs_presentation:
+    pandoc_args: [
+      '--from', 'markdown+autolink_bare_uris+tex_math_single_backslash-implicit_figures'
+    ]
+    theme: night
+    self_contained: false
+    reveal_plugins: ["chalkboard"]
+    highlight: kate
+    transition: slide
+    center: false
+    progress: true
+    css: "for_reveal.css"
+---
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(
+  engine.path = list(python="~/myenv/bin/python3"),
+#  engine = "python",
+  collapse = TRUE,
+#  cache = TRUE,
+  comment = " ##"
+  )
+```
+
+
+```{python, echo = FALSE}
+import numpy as np
+import scipy as sp
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.rc('font', family='IPAexGothic') # 日本語プロット設定
+import mglearn
+```
+
+# intro
+
+## ニューラルネットワーク
+
+- 多層のニューラルネットワーク
+    - 学習させられない、性能が発揮できない冬の時代が続いた…
+- なんやかんやあって…
+    - 多層のニューラルネットワークが学習できるように！
+    - **ディープラーニング**というアレゲな二つ名を引っさげて再登場！
+
+## 多層パーセプトロン
+
+- **MLP**: multilayer perceptron
+    - 今回はコイツを取り上げます。
+    - ディープラーニングの中でも割と簡単(本当？)。
+
+## ニューラルネットワークのモデル {#nnet1}
+
+- **線形モデル**: 重み付き和の計算
+
+```{r, echo = FALSE, size=3}
+DiagrammeR::grViz("
+digraph  {
+  graph [rankdir=LR; splines=false]
+  ranksep = 1.4;
+  {
+    node [shape=circle, color=yellow, style = filled, fillcolor=yellow];
+    'b[0]';
+  }
+  {
+    node [shape=circle, color=chartreuse, style = filled, fillcolor=chartreuse];
+    'x[0]' 'x[1]' 'x[2]' 'x[3]';
+  }
+  subgraph cluster0 {
+  node [style=solid, shape=circle, width=.6];
+  label = '入力';
+  penwidth = 0;
+  'b[0]' 'x[0]' 'x[1]' 'x[2]' 'x[3]';
+  }
+  subgraph cluster1 {
+  node [shape=circle, color=coral1, style=filled, fillcolor=coral1];
+  label = '出力';
+  penwidth = 0;
+  ŷ
+  }
+  'b[0]' -> ŷ;
+  'x[0]' -> ŷ [label = 'w[0]'];
+  'x[1]' -> ŷ [label = 'w[1]'];
+  'x[2]' -> ŷ [label = 'w[2]'];
+  'x[3]' -> ŷ [label = 'w[3]'];
+}
+")
+```
+
+## ニューラルネットワークのモデル {#nnet2}
+
+- 重み付き和の計算を層にするとMLPに
+
+```{r, echo=FALSE}
+DiagrammeR::grViz("
+digraph {
+  rankdir = LR;
+  splines = false;
+  edge[style=invis];
+  ranksep = 1.4;
+  {
+    node [shape=circle, color=yellow, style = filled, fillcolor=yellow];
+    'b[0]' 'b[1]';
+  }
+  {
+    node [shape=circle, color=chartreuse, style = filled, fillcolor=chartreuse];
+    'x[0]' 'x[1]' 'x[2]' 'x[3]';
+  }
+  {
+    node [shape=circle, color=dodgerblue, style = filled, fillcolor=dodgerblue];
+    'h[0]' 'h[1]' 'h[2]';
+  }
+  {
+    node [shape=circle, color=coral1, style=filled, fillcolor=coral1];
+    ŷ
+  }
+  { rank=same;'b[0]'->'x[0]'->'x[1]'->'x[2]'->'x[3]'}
+  { rank=same;'b[1]'->'h[0]'->'h[1]'->'h[2]'}
+  'b[0]'->'b[1]'
+  l0 [shape = plaintext, label = '入力'];
+  l0->'b[0]';
+  {rank=same; l0;'b[0]'}
+  l1 [shape = plaintext, label = '隠れ層'];
+  l1->'b[1]';
+  {rank=same; l1;'b[1]'}
+  l3 [shape = plaintext, label = '出力'];
+  l3->ŷ;
+  {rank=same; l3;ŷ}
+  edge[style=solid, tailport=e, headport=w];
+  {'b[0]'; 'x[0]'; 'x[1]'; 'x[2]'; 'x[3]'} -> {'h[0]'; 'h[1]'; 'h[2]'}
+  {'b[1]'; 'h[0]'; 'h[1]'; 'h[2]'} ->  ŷ;
+}
+")
+```
+
+## ニューラルネットワークのモデル {#nnet3}
+
+- 単に線形モデルを層にしてもダメ
+    - 線形モデルは重み行列を掛けてるだけ
+    - ${\bf h} = {\bf W_1x}$
+    - $\hat{y} = {\bf W_2h} = {\bf W_2 W_1 x}$
+    - ${\bf W_2 W_1} = {\bf W}$と置けるので、等価な1層のネットワークがある。
+- チョット工夫する
+    - 間に**非線形関数** (活性化関数)を挟む
+    
+## 活性化関数 {#activate_function1}
+
+- activation function
+    - 重み付き和の出力を変換するときに使う関数
+    - ReLUやシグモイド関数、tanhがよく使われる
+        - ReLU: `max(0, x)`
+        - シグモイド: 0〜1の範囲でS字に変化するやつ
+        - tanh: 「原点通るべきじゃね？」という気持ちからシグモイド関数を線形変換したやつ
+    
+## 活性化関数 {#activate_function2}
+
+```{python}
+line = np.linspace(-3, 3, 100)
+plt.figure(figsize=(5, 3))
+plt.plot(line, np.tanh(line), label = "tanh")
+plt.plot(line, np.maximum(line, 0), label = "ReLU")
+plt.plot(line, 1.0 / (1.0 + np.exp(-line)), label = "sigmoid")
+plt.legend(loc = "best")
+plt.xlabel("x")
+plt.ylabel("ReLU(x), tanh(x), sigmoid(x)")
+```
+
+```{python echo=FALSE, out.height=300, fig.align="center"}
+plt.tight_layout()
+plt.show()
+plt.close()
+```
+
+## ディープラーニング
+
+- ノード数や層が多いヤツからこの言葉が生まれた。
+
+```{r, echo=FALSE}
+DiagrammeR::grViz("
+digraph {
+  rankdir = LR;
+  splines = false;
+  edge[style=invis];
+  ranksep = 1.4;
+  {
+    node [shape=circle, color=yellow, style = filled, fillcolor=yellow];
+    'b[0]' 'b[1]' 'b[2]';
+  }
+  {
+    node [shape=circle, color=chartreuse, style = filled, fillcolor=chartreuse];
+    'x[0]' 'x[1]' 'x[2]' 'x[3]';
+  }
+  {
+    node [shape=circle, color=dodgerblue, style = filled, fillcolor=dodgerblue];
+    'h1[0]' 'h1[1]' 'h1[2]';
+    'h2[0]' 'h2[1]' 'h2[2]';
+  }
+  {
+    node [shape=circle, color=coral1, style=filled, fillcolor=coral1];
+    ŷ
+  }
+  { rank=same;'b[0]'->'x[0]'->'x[1]'->'x[2]'->'x[3]'}
+  { rank=same;'b[1]'->'h1[0]'->'h1[1]'->'h1[2]'}
+  { rank=same;'b[2]'->'h2[0]'->'h2[1]'->'h2[2]'}
+  'b[0]'->'b[1]'->'b[2]'
+  l0 [shape = plaintext, label = '入力'];
+  l0->'b[0]';
+  {rank=same; l0;'b[0]'}
+  l1 [shape = plaintext, label = '隠れ層1'];
+  l1->'b[1]';
+  {rank=same; l1;'b[1]'}
+  l2 [shape = plaintext, label = '隠れ層2'];
+  l2->'b[2]';
+  {rank=same; l2;'b[2]'}
+  l3 [shape = plaintext, label = '出力'];
+  l3->ŷ;
+  {rank=same; l3;ŷ}
+  edge[style=solid, tailport=e, headport=w];
+  {'b[0]'; 'x[0]'; 'x[1]'; 'x[2]'; 'x[3]'} -> {'h1[0]'; 'h1[1]'; 'h1[2]'}
+  {'b[1]'; 'h1[0]'; 'h1[1]'; 'h1[2]'} ->  {'h2[0]'; 'h2[1]'; 'h2[2]'}
+  {'b[2]'; 'h2[0]'; 'h2[1]'; 'h2[2]'} ->  ŷ;
+}
+")
+```
+
+# ニューラルネットワークのチューニング
+
+## テストデータ
+
+- `two_moons`データセットを用いて試してみる。
+
+```{python}
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.datasets import make_moons
+
+X, y = make_moons(n_samples=100, noise=.25, random_state=3)
+X_train, X_test, y_train, y_test = train_test_split(
+  X, y, stratify=y, random_state=42
+)
+
+mlp = MLPClassifier(solver='lbfgs', random_state=0).fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill=True, alpha=.3)
+mglearn.discrete_scatter(X_train[:, 0], X_train[:, 1], y_train)
+plt.xlabel("特徴量0")
+plt.ylabel("特徴量1")
+```
+
+---
+
+```{python echo=FALSE, fig.align="center"}
+plt.show()
+plt.close()
+```
+
+## MLPのパラメータ - 隠れ層のサイズ
+
+- デフォルト: ノード数100の隠れ層が1層。
+- 小さなデータセットに対しては大きすぎる。
+- とりあえず10に減らす。
+
+```{python}
+mlp = MLPClassifier(solver='lbfgs', random_state=0, hidden_layer_sizes=[10])
+mlp.fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill=True, alpha=.3)
+mglearn.discrete_scatter(X_train[:, 0], X_train[:, 1], y_train)
+plt.xlabel("特徴量0")
+plt.ylabel("特徴量1")
+```
+
+---
+
+```{python echo=FALSE, fig.align="center"}
+plt.show()
+plt.close()
+```
+
+## 境界がギザギザしてる…？
+
+- ノード数を減らした & 活性化関数がReLUのため。
+- 隠れ層を増やす（10ノード×2層）とちょっと滑らかに。
+
+```{python}
+# 10ユニットの隠れ層を2つ使う
+mlp = MLPClassifier(solver='lbfgs', random_state=0, hidden_layer_sizes=[10, 10])
+mlp.fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill=True, alpha=.3)
+mglearn.discrete_scatter(X_train[:, 0], X_train[:, 1], y_train)
+plt.xlabel("特徴量0")
+plt.ylabel("特徴量1")
+```
+
+---
+
+```{python echo=FALSE, fig.align="center"}
+plt.show()
+plt.close()
+```
+
+## もっと滑らかに
+
+- 活性化関数をtanhにする。
+
+```{python}
+# 10ユニットの隠れ層を2つ使う+活性化関数にtanh
+mlp = MLPClassifier(solver='lbfgs', activation='tanh',
+                    random_state=0, hidden_layer_sizes=[10, 10])
+mlp.fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill=True, alpha=.3)
+mglearn.discrete_scatter(X_train[:, 0], X_train[:, 1], y_train)
+plt.xlabel("特徴量0")
+plt.ylabel("特徴量1")
+```
+
+---
+
+```{python echo=FALSE, fig.align="center"}
+plt.show()
+plt.close()
+```
+
+## まだまだあるぞパラメータ
+
+- L2正則化のパラメータがある
+    - (デフォルトはめっちゃ弱い)
+- ちょっといじってみる。
+
+```{python}
+fig, axes = plt.subplots(2, 4, figsize=(20, 8))
+for axx, n_hidden_nodes in zip(axes, [10, 100]):
+  for ax, alpha in zip(axx, [0.0001, 0.01, 0.1, 1]):
+    mlp = MLPClassifier(solver='lbfgs', random_state=0,
+                        hidden_layer_sizes=[n_hidden_nodes, n_hidden_nodes],
+                        alpha=alpha)
+    mlp.fit(X_train, y_train)
+    mglearn.plots.plot_2d_separator(mlp, X_train, fill=True, alpha=.3, ax=ax)
+    mglearn.discrete_scatter(X_train[:, 0], X_train[:, 1], y_train ,ax=ax)
+    ax.set_title("隠れ層=[{}, {}]\nalpha={:.4f}".format(
+                 n_hidden_nodes, n_hidden_nodes, alpha))
+```
+
+---
+
+```{python echo=FALSE, fig.align="center"}
+plt.show()
+plt.close()
+```
+
+## 他の影響要素
+
+- ニューラルネットワークでは重みの初期値を乱数で決める。
+- ネットワークが小さいと乱数の影響が結構出る。
+- 乱数だけを変更して影響を観察する。
+
+```{python}
+fig, axes = plt.subplots(2, 4, figsize=(20, 8))
+for i, ax in enumerate(axes.ravel()):
+  mlp = MLPClassifier(solver='lbfgs', random_state=i,
+                      hidden_layer_sizes=[100, 100])
+  mlp.fit(X_train, y_train)
+  mglearn.plots.plot_2d_separator(mlp, X_train, fill=True, alpha=.3, ax=ax)
+  mglearn.discrete_scatter(X_train[:, 0], X_train[:, 1], y_train, ax=ax)
+```
+
+---
+
+```{python echo=FALSE, fig.align="center"}
+plt.show()
+plt.close()
+```
+
+## 実データに対するMLP
+
+- cancerを使う。
+- cancerは特徴量のレンジが様々という特徴がある。
+
+```{python}
+from sklearn.datasets import load_breast_cancer
+cancer = load_breast_cancer()
+print(cancer.data.max(axis=0)) # 各データセットの最大値
+```
+
+## cancerにMLPを適用する
+
+```{python}
+X_train, X_test, y_train, y_test = train_test_split(
+  cancer.data, cancer.target, random_state=0
+)
+mlp = MLPClassifier(random_state=42)
+mlp.fit(X_train, y_train)
+print("訓練セットの精度: {:.2f}".format(mlp.score(X_train, y_train)))
+print("テストセットの精度: {:.2f}".format(mlp.score(X_test, y_test)))
+```
+
+- 悪くないけど何かイマイチ…？
+    - MLPはSVMと同じようにスケールの影響を受ける。
+    - スケールを揃える必要がある。
+    - 平均0、分散1がベスト。
+
+## cancerをスケーリングしてMLPを適用する
+
+- とりあえず今回は手作業(もっといい方法は後で)
+
+```{python}
+mean_on_train = X_train.mean(axis=0) # 各データセットの平均値
+std_on_train = X_train.std(axis=0) # 各データセットの標準偏差
+
+# 平均を引いてスケーリングする
+X_train_scaled = (X_train - mean_on_train) / std_on_train
+X_test_scaled = (X_test - mean_on_train) / std_on_train
+
+# MLPを適用
+mlp = MLPClassifier(random_state=0)
+mlp.fit(X_train_scaled, y_train)
+
+print("訓練セットの精度: {:.3f}".format(mlp.score(X_train_scaled, y_train)))
+print("テストセットの精度: {:.3f}".format(mlp.score(X_test_scaled, y_test)))
+```
+
+- 精度は上がったけど何か警告出てる…？
+
+## 繰り返し数を増やす
+
+- MLPは試行の繰り返しで重みを最適化していく。
+- 繰り返し数はデフォルトで200が上限なので、これを増やす。
+
+```{python}
+mlp = MLPClassifier(max_iter=1000, random_state=0)
+mlp.fit(X_train_scaled, y_train)
+
+print("訓練セットの精度: {:.3f}".format(mlp.score(X_train_scaled, y_train)))
+print("テストセットの精度: {:.3f}".format(mlp.score(X_test_scaled, y_test)))
+```
+
+- 精度は上がったが、汎化性能にもう一声欲しい。
+
+## 雑に正則化する
+
+- とりあえずalphaを増やして強めの正則化をかける。
+
+```{python}
+mlp = MLPClassifier(max_iter=1000, alpha=1, random_state=0)
+mlp.fit(X_train_scaled, y_train)
+
+print("訓練セットの精度: {:.3f}".format(mlp.score(X_train_scaled, y_train)))
+print("テストセットの精度: {:.3f}".format(mlp.score(X_test_scaled, y_test)))
+```
+
+- こんな感じでチューニングをやっていく。
+
+## 何がどうなっての
+
+- ニューラルネットワークは決定木や線形モデルに比べると説明が難しい。
+- どの特徴量がどうなってるのかよくわからん…
+- 隠れ層の重み行列を可視化すると多少は見当が付く可能性がある。
+
+```{python}
+plt.figure(figsize=(20, 5))
+plt.imshow(mlp.coefs_[0], interpolation='none', cmap='viridis')
+plt.yticks(range(30), cancer.feature_names)
+plt.xlabel("重み行列の列")
+plt.ylabel("特徴量")
+plt.colorbar()
+```
+
+---
+
+```{python, echo = FALSE, fig.align="center"}
+plt.tight_layout()
+plt.show()
+plt.close()
+```
+
+- 全てのノードで重みが少ない特徴量は重要じゃないかも。
+    - 単にこのネットワークが利用しきれていないだけという可能性も…
+
+## もっと大規模にやりたい
+
+- ディープラーニングに特化したライブラリを使おう。
+- keras、lasagne、tensor-flow、theanoあたりが有名どころ。
+    - theano、tensor-flow…ディープラーニングのライブラリ。
+    - keras、lasagne…theanoやtensor-flowを動かすライブラリ。
+        - lasagneはラザーニェとか読むらしい。2015年くらいにKaggleで流行ってたとの情報があるが最近の記事がない。
+
+# 長所、短所、パラメータ
+
+## ニューラルネットワークの長所短所
+
+- 長所
+    - 大量のデータを使って驚く程複雑なモデルを構築できる
+    - 時間とデータと十分なチューニングがあれば他のアルゴリズムを凌駕する可能性がある
+- 短所
+    - 訓練に時間がかかる
+    - 特徴量間のスケールが違うと上手く動かない
+    - パラメータチューニングはそれ自体が職人芸
+
+## ニューラルネットワークのパラメータ
+
+- 最も重要なのは**隠れ層の数**と**ノード数**
+    - 層は1つか2つからはじめて増やしていく
+    - ノード数は入力と同じくらい(数千を超えることはあまり無い)
+
+## ネットワークの複雑さの捉え方
+
+- **重みの数**は一つの指標。
+    - 100の入力から100の出力を得るためには、10,000の重みを持つ行列が必要。
+    
+## パラメータ調整の定石
+
+- 大きめのネットワークで過学習させる
+    - まずそもそも学習できるのかを確認
+- ネットワークを小さくしたり正則化パラメータを調整して汎化性能を高める
+
+## モデル学習の方法
+
+- 誤差を小さくするためのアルゴリズムも色々ある。
+    - cf. [An overview of gradient descent optimization algorithms](http://ruder.io/optimizing-gradient-descent/index.html#visualizationofalgorithms)
+- 初心者は`adam`か`lbfgs`を使っておこう。
+
+## fitはモデルをリセットする…？
+
+- デフォルトでは`fit`呼び出しの度に重みはリセットされる。
+- `MLPClassifier`呼び出し時に`warm_start=True`を指定すると前回の学習を引き継げるようになる。
+    - cf. [ニューラルネットワークのパラメータ設定方法(scikit-learnのMLPClassifier)](https://spjai.com/neural-network-parameter/)

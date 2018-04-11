@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="@nozma" />
+  <title>2.3.8 ニューラルネットワーク</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="index_files/reveal.js-3.3.0.1/css/reveal.css"/>
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #ffffff; color: #1f1c1b; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; background-color: #ffffff; color: #a0a0a0; border-right: 1px solid #a0a0a0; }
+td.sourceCode { padding-left: 5px; }
+pre, code { color: #1f1c1b; background-color: #ffffff; }
+code > span.kw { color: #1f1c1b; font-weight: bold; } /* Keyword */
+code > span.dt { color: #0057ae; } /* DataType */
+code > span.dv { color: #b08000; } /* DecVal */
+code > span.bn { color: #b08000; } /* BaseN */
+code > span.fl { color: #b08000; } /* Float */
+code > span.cn { color: #aa5500; } /* Constant */
+code > span.ch { color: #924c9d; } /* Char */
+code > span.sc { color: #3daee9; } /* SpecialChar */
+code > span.st { color: #bf0303; } /* String */
+code > span.vs { color: #bf0303; } /* VerbatimString */
+code > span.ss { color: #ff5500; } /* SpecialString */
+code > span.im { color: #ff5500; } /* Import */
+code > span.co { color: #898887; } /* Comment */
+code > span.do { color: #607880; } /* Documentation */
+code > span.an { color: #ca60ca; } /* Annotation */
+code > span.cv { color: #0095ff; } /* CommentVar */
+code > span.ot { color: #006e28; } /* Other */
+code > span.fu { color: #644a9b; } /* Function */
+code > span.va { color: #0057ae; } /* Variable */
+code > span.cf { color: #1f1c1b; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #1f1c1b; } /* Operator */
+code > span.bu { color: #644a9b; font-weight: bold; } /* BuiltIn */
+code > span.ex { color: #0095ff; font-weight: bold; } /* Extension */
+code > span.pp { color: #006e28; } /* Preprocessor */
+code > span.at { color: #0057ae; } /* Attribute */
+code > span.re { color: #0057ae; } /* RegionMarker */
+code > span.in { color: #b08000; } /* Information */
+code > span.wa { color: #bf0303; } /* Warning */
+code > span.al { color: #bf0303; font-weight: bold; } /* Alert */
+code > span.er { color: #bf0303; text-decoration: underline; } /* Error */
+code > span. { color: #1f1c1b; } /* Normal */
+</style>
+
+<link rel="stylesheet" href="index_files/reveal.js-3.3.0.1/css/theme/night.css" id="theme">
+
+<style type="text/css">
+.reveal section img {
+  background: rgba(255, 255, 255, 0.85);
+}
+</style>
+
+  <!-- some tweaks to reveal css -->
+  <style type="text/css">
+    .reveal h1 { font-size: 2.0em; }
+    .reveal h2 { font-size: 1.5em;  }
+    .reveal h3 { font-size: 1.25em;	}
+    .reveal h4 { font-size: 1em;	}
+
+    .reveal .slides>section,
+    .reveal .slides>section>section {
+      padding: 0px 0px;
+    }
+
+
+
+    .reveal table {
+      border-width: 1px;
+      border-spacing: 2px;
+      border-style: dotted;
+      border-color: gray;
+      border-collapse: collapse;
+      font-size: 0.7em;
+    }
+
+    .reveal table th {
+      border-width: 1px;
+      padding-left: 10px;
+      padding-right: 25px;
+      font-weight: bold;
+      border-style: dotted;
+      border-color: gray;
+    }
+
+    .reveal table td {
+      border-width: 1px;
+      padding-left: 10px;
+      padding-right: 25px;
+      border-style: dotted;
+      border-color: gray;
+    }
+
+
+  </style>
+
+    <style type="text/css">code{white-space: pre;}</style>
+
+    <link rel="stylesheet" href="for_reveal.css"/>
+
+<!-- Printing and PDF exports -->
+<script id="paper-css" type="application/dynamic-css">
+
+/* Default Print Stylesheet Template
+   by Rob Glazebrook of CSSnewbie.com
+   Last Updated: June 4, 2008
+
+   Feel free (nay, compelled) to edit, append, and
+   manipulate this file as you see fit. */
+
+
+@media print {
+
+	/* SECTION 1: Set default width, margin, float, and
+	   background. This prevents elements from extending
+	   beyond the edge of the printed page, and prevents
+	   unnecessary background images from printing */
+	html {
+		background: #fff;
+		width: auto;
+		height: auto;
+		overflow: visible;
+	}
+	body {
+		background: #fff;
+		font-size: 20pt;
+		width: auto;
+		height: auto;
+		border: 0;
+		margin: 0 5%;
+		padding: 0;
+		overflow: visible;
+		float: none !important;
+	}
+
+	/* SECTION 2: Remove any elements not needed in print.
+	   This would include navigation, ads, sidebars, etc. */
+	.nestedarrow,
+	.controls,
+	.fork-reveal,
+	.share-reveal,
+	.state-background,
+	.reveal .progress,
+	.reveal .backgrounds {
+		display: none !important;
+	}
+
+	/* SECTION 3: Set body font face, size, and color.
+	   Consider using a serif font for readability. */
+	body, p, td, li, div {
+		font-size: 20pt!important;
+		font-family: Georgia, "Times New Roman", Times, serif !important;
+		color: #000;
+	}
+
+	/* SECTION 4: Set heading font face, sizes, and color.
+	   Differentiate your headings from your body text.
+	   Perhaps use a large sans-serif for distinction. */
+	h1,h2,h3,h4,h5,h6 {
+		color: #000!important;
+		height: auto;
+		line-height: normal;
+		font-family: Georgia, "Times New Roman", Times, serif !important;
+		text-shadow: 0 0 0 #000 !important;
+		text-align: left;
+		letter-spacing: normal;
+	}
+	/* Need to reduce the size of the fonts for printing */
+	h1 { font-size: 28pt !important;  }
+	h2 { font-size: 24pt !important; }
+	h3 { font-size: 22pt !important; }
+	h4 { font-size: 22pt !important; font-variant: small-caps; }
+	h5 { font-size: 21pt !important; }
+	h6 { font-size: 20pt !important; font-style: italic; }
+
+	/* SECTION 5: Make hyperlinks more usable.
+	   Ensure links are underlined, and consider appending
+	   the URL to the end of the link for usability. */
+	a:link,
+	a:visited {
+		color: #000 !important;
+		font-weight: bold;
+		text-decoration: underline;
+	}
+	/*
+	.reveal a:link:after,
+	.reveal a:visited:after {
+		content: " (" attr(href) ") ";
+		color: #222 !important;
+		font-size: 90%;
+	}
+	*/
+
+
+	/* SECTION 6: more reveal.js specific additions by @skypanther */
+	ul, ol, div, p {
+		visibility: visible;
+		position: static;
+		width: auto;
+		height: auto;
+		display: block;
+		overflow: visible;
+		margin: 0;
+		text-align: left !important;
+	}
+	.reveal pre,
+	.reveal table {
+		margin-left: 0;
+		margin-right: 0;
+	}
+	.reveal pre code {
+		padding: 20px;
+		border: 1px solid #ddd;
+	}
+	.reveal blockquote {
+		margin: 20px 0;
+	}
+	.reveal .slides {
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+
+		left: 0 !important;
+		top: 0 !important;
+		margin-left: 0 !important;
+		margin-top: 0 !important;
+		padding: 0 !important;
+		zoom: 1 !important;
+
+		overflow: visible !important;
+		display: block !important;
+
+		text-align: left !important;
+		-webkit-perspective: none;
+		   -moz-perspective: none;
+		    -ms-perspective: none;
+		        perspective: none;
+
+		-webkit-perspective-origin: 50% 50%;
+		   -moz-perspective-origin: 50% 50%;
+		    -ms-perspective-origin: 50% 50%;
+		        perspective-origin: 50% 50%;
+	}
+	.reveal .slides section {
+		visibility: visible !important;
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+		display: block !important;
+		overflow: visible !important;
+
+		left: 0 !important;
+		top: 0 !important;
+		margin-left: 0 !important;
+		margin-top: 0 !important;
+		padding: 60px 20px !important;
+		z-index: auto !important;
+
+		opacity: 1 !important;
+
+		page-break-after: always !important;
+
+		-webkit-transform-style: flat !important;
+		   -moz-transform-style: flat !important;
+		    -ms-transform-style: flat !important;
+		        transform-style: flat !important;
+
+		-webkit-transform: none !important;
+		   -moz-transform: none !important;
+		    -ms-transform: none !important;
+		        transform: none !important;
+
+		-webkit-transition: none !important;
+		   -moz-transition: none !important;
+		    -ms-transition: none !important;
+		        transition: none !important;
+	}
+	.reveal .slides section.stack {
+		padding: 0 !important;
+	}
+	.reveal section:last-of-type {
+		page-break-after: avoid !important;
+	}
+	.reveal section .fragment {
+		opacity: 1 !important;
+		visibility: visible !important;
+
+		-webkit-transform: none !important;
+		   -moz-transform: none !important;
+		    -ms-transform: none !important;
+		        transform: none !important;
+	}
+	.reveal section img {
+		display: block;
+		margin: 15px 0px;
+		background: rgba(255,255,255,1);
+		border: 1px solid #666;
+		box-shadow: none;
+	}
+
+	.reveal section small {
+		font-size: 0.8em;
+	}
+
+}  
+</script>
+
+
+<script id="pdf-css" type="application/dynamic-css">
+    
+/**
+ * This stylesheet is used to print reveal.js
+ * presentations to PDF.
+ *
+ * https://github.com/hakimel/reveal.js#pdf-export
+ */
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+
+body {
+	margin: 0 auto !important;
+	border: 0;
+	padding: 0;
+	float: none !important;
+	overflow: visible;
+}
+
+html {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+/* Remove any elements not needed in print. */
+.nestedarrow,
+.reveal .controls,
+.reveal .progress,
+.reveal .playback,
+.reveal.overview,
+.fork-reveal,
+.share-reveal,
+.state-background {
+	display: none !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	text-shadow: 0 0 0 #000 !important;
+}
+
+.reveal pre code {
+	overflow: hidden !important;
+	font-family: Courier, 'Courier New', monospace !important;
+}
+
+ul, ol, div, p {
+	visibility: visible;
+	position: static;
+	width: auto;
+	height: auto;
+	display: block;
+	overflow: visible;
+	margin: auto;
+}
+.reveal {
+	width: auto !important;
+	height: auto !important;
+	overflow: hidden !important;
+}
+.reveal .slides {
+	position: static;
+	width: 100%;
+	height: auto;
+
+	left: auto;
+	top: auto;
+	margin: 0 !important;
+	padding: 0 !important;
+
+	overflow: visible;
+	display: block;
+
+	-webkit-perspective: none;
+	   -moz-perspective: none;
+	    -ms-perspective: none;
+	        perspective: none;
+
+	-webkit-perspective-origin: 50% 50%; /* there isn't a none/auto value but 50-50 is the default */
+	   -moz-perspective-origin: 50% 50%;
+	    -ms-perspective-origin: 50% 50%;
+	        perspective-origin: 50% 50%;
+}
+
+.reveal .slides section {
+	page-break-after: always !important;
+
+	visibility: visible !important;
+	position: relative !important;
+	display: block !important;
+	position: relative !important;
+
+	margin: 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+	min-height: 1px;
+
+	opacity: 1 !important;
+
+	-webkit-transform-style: flat !important;
+	   -moz-transform-style: flat !important;
+	    -ms-transform-style: flat !important;
+	        transform-style: flat !important;
+
+	-webkit-transform: none !important;
+	   -moz-transform: none !important;
+	    -ms-transform: none !important;
+	        transform: none !important;
+}
+
+.reveal section.stack {
+	margin: 0 !important;
+	padding: 0 !important;
+	page-break-after: avoid !important;
+	height: auto !important;
+	min-height: auto !important;
+}
+
+.reveal img {
+	box-shadow: none;
+}
+
+.reveal .roll {
+	overflow: visible;
+	line-height: 1em;
+}
+
+/* Slide backgrounds are placed inside of their slide when exporting to PDF */
+.reveal section .slide-background {
+	display: block !important;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	z-index: -1;
+}
+
+/* All elements should be above the slide-background */
+.reveal section>* {
+	position: relative;
+	z-index: 1;
+}
+
+/* Display slide speaker notes when 'showNotes' is enabled */
+.reveal .speaker-notes-pdf {
+	display: block;
+	width: 100%;
+	max-height: none;
+	left: auto;
+	top: auto;
+	z-index: 100;
+}
+
+/* Display slide numbers when 'slideNumber' is enabled */
+.reveal .slide-number-pdf {
+	display: block;
+	position: absolute;
+	font-size: 14px;
+}
+
+</script>
+
+
+<script>
+var style = document.createElement( 'style' );
+style.type = 'text/css';
+var style_script_id = window.location.search.match( /print-pdf/gi ) ? 'pdf-css' : 'paper-css';
+var style_script = document.getElementById(style_script_id).text;
+style.innerHTML = style_script;
+document.getElementsByTagName('head')[0].appendChild(style);
+</script>
+
+    <link href="index_files/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+    <script src="index_files/htmlwidgets-1.0/htmlwidgets.js"></script>
+    <script src="index_files/viz-0.3/viz.js"></script>
+    <link href="index_files/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+    <script src="index_files/grViz-binding-1.0.0/grViz.js"></script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+    <h1 class="title">2.3.8 ニューラルネットワーク</h1>
+    <h2 class="author"><span class="citation" data-cites="nozma">@nozma</span></h2>
+    <h3 class="date">2018/4/12</h3>
+</section>
+
+<section><section id="intro" class="titleslide slide level1"><h1>intro</h1></section><section id="ニューラルネットワーク" class="slide level2">
+<h2>ニューラルネットワーク</h2>
+<ul>
+<li>多層のニューラルネットワーク
+<ul>
+<li>学習させられない、性能が発揮できない冬の時代が続いた…</li>
+</ul></li>
+<li>なんやかんやあって…
+<ul>
+<li>多層のニューラルネットワークが学習できるように！</li>
+<li><strong>ディープラーニング</strong>というアレゲな二つ名を引っさげて再登場！</li>
+</ul></li>
+</ul>
+</section><section id="多層パーセプトロン" class="slide level2">
+<h2>多層パーセプトロン</h2>
+<ul>
+<li><strong>MLP</strong>: multilayer perceptron
+<ul>
+<li>今回はコイツを取り上げます。</li>
+<li>ディープラーニングの中でも割と簡単(本当？)。</li>
+</ul></li>
+</ul>
+</section><section id="nnet1" class="slide level2">
+<h2>ニューラルネットワークのモデル</h2>
+<ul>
+<li><strong>線形モデル</strong>: 重み付き和の計算</li>
+</ul>
+<div id="htmlwidget-619c4e03d175714be56b" style="width:768px;height:576px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-619c4e03d175714be56b">{"x":{"diagram":"\ndigraph  {\n  graph [rankdir=LR; splines=false]\n  ranksep = 1.4;\n  {\n    node [shape=circle, color=yellow, style = filled, fillcolor=yellow];\n    \"b[0]\";\n  }\n  {\n    node [shape=circle, color=chartreuse, style = filled, fillcolor=chartreuse];\n    \"x[0]\" \"x[1]\" \"x[2]\" \"x[3]\";\n  }\n  subgraph cluster0 {\n  node [style=solid, shape=circle, width=.6];\n  label = \"入力\";\n  penwidth = 0;\n  \"b[0]\" \"x[0]\" \"x[1]\" \"x[2]\" \"x[3]\";\n  }\n  subgraph cluster1 {\n  node [shape=circle, color=coral1, style=filled, fillcolor=coral1];\n  label = \"出力\";\n  penwidth = 0;\n  ŷ\n  }\n  \"b[0]\" -> ŷ;\n  \"x[0]\" -> ŷ [label = \"w[0]\"];\n  \"x[1]\" -> ŷ [label = \"w[1]\"];\n  \"x[2]\" -> ŷ [label = \"w[2]\"];\n  \"x[3]\" -> ŷ [label = \"w[3]\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</section><section id="nnet2" class="slide level2">
+<h2>ニューラルネットワークのモデル</h2>
+<ul>
+<li>重み付き和の計算を層にするとMLPに</li>
+</ul>
+<div id="htmlwidget-40da3ed1330e6a76a44b" style="width:768px;height:576px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-40da3ed1330e6a76a44b">{"x":{"diagram":"\ndigraph {\n  rankdir = LR;\n  splines = false;\n  edge[style=invis];\n  ranksep = 1.4;\n  {\n    node [shape=circle, color=yellow, style = filled, fillcolor=yellow];\n    \"b[0]\" \"b[1]\";\n  }\n  {\n    node [shape=circle, color=chartreuse, style = filled, fillcolor=chartreuse];\n    \"x[0]\" \"x[1]\" \"x[2]\" \"x[3]\";\n  }\n  {\n    node [shape=circle, color=dodgerblue, style = filled, fillcolor=dodgerblue];\n    \"h[0]\" \"h[1]\" \"h[2]\";\n  }\n  {\n    node [shape=circle, color=coral1, style=filled, fillcolor=coral1];\n    ŷ\n  }\n  { rank=same;\"b[0]\"->\"x[0]\"->\"x[1]\"->\"x[2]\"->\"x[3]\"}\n  { rank=same;\"b[1]\"->\"h[0]\"->\"h[1]\"->\"h[2]\"}\n  \"b[0]\"->\"b[1]\"\n  l0 [shape = plaintext, label = \"入力\"];\n  l0->\"b[0]\";\n  {rank=same; l0;\"b[0]\"}\n  l1 [shape = plaintext, label = \"隠れ層\"];\n  l1->\"b[1]\";\n  {rank=same; l1;\"b[1]\"}\n  l3 [shape = plaintext, label = \"出力\"];\n  l3->ŷ;\n  {rank=same; l3;ŷ}\n  edge[style=solid, tailport=e, headport=w];\n  {\"b[0]\"; \"x[0]\"; \"x[1]\"; \"x[2]\"; \"x[3]\"} -> {\"h[0]\"; \"h[1]\"; \"h[2]\"}\n  {\"b[1]\"; \"h[0]\"; \"h[1]\"; \"h[2]\"} ->  ŷ;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</section><section id="nnet3" class="slide level2">
+<h2>ニューラルネットワークのモデル</h2>
+<ul>
+<li>単に線形モデルを層にしてもダメ
+<ul>
+<li>線形モデルは重み行列を掛けてるだけ</li>
+<li><span class="math inline">\({\bf h} = {\bf W_1x}\)</span></li>
+<li><span class="math inline">\(\hat{y} = {\bf W_2h} = {\bf W_2 W_1 x}\)</span></li>
+<li><span class="math inline">\({\bf W_2 W_1} = {\bf W}\)</span>と置けるので、等価な1層のネットワークがある。</li>
+</ul></li>
+<li>チョット工夫する
+<ul>
+<li>間に<strong>非線形関数</strong> (活性化関数)を挟む</li>
+</ul></li>
+</ul>
+</section><section id="activate_function1" class="slide level2">
+<h2>活性化関数</h2>
+<ul>
+<li>activation function
+<ul>
+<li>重み付き和の出力を変換するときに使う関数</li>
+<li>ReLUやシグモイド関数、tanhがよく使われる
+<ul>
+<li>ReLU: <code>max(0, x)</code></li>
+<li>シグモイド: 0〜1の範囲でS字に変化するやつ</li>
+<li>tanh: 「原点通るべきじゃね？」という気持ちからシグモイド関数を線形変換したやつ</li>
+</ul></li>
+</ul></li>
+</ul>
+</section><section id="activate_function2" class="slide level2">
+<h2>活性化関数</h2>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">line <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">100</span>)
+plt.figure(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">3</span>))
+plt.plot(line, np.tanh(line), label <span class="op">=</span> <span class="st">&quot;tanh&quot;</span>)
+plt.plot(line, np.maximum(line, <span class="dv">0</span>), label <span class="op">=</span> <span class="st">&quot;ReLU&quot;</span>)
+plt.plot(line, <span class="fl">1.0</span> <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">+</span> np.exp(<span class="op">-</span>line)), label <span class="op">=</span> <span class="st">&quot;sigmoid&quot;</span>)
+plt.legend(loc <span class="op">=</span> <span class="st">&quot;best&quot;</span>)
+plt.xlabel(<span class="st">&quot;x&quot;</span>)
+plt.ylabel(<span class="st">&quot;ReLU(x), tanh(x), sigmoid(x)&quot;</span>)</code></pre></div>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-5-1.png" width="480" height="300" style="display: block; margin: auto;" /></p>
+</section><section id="ディープラーニング" class="slide level2">
+<h2>ディープラーニング</h2>
+<ul>
+<li>ノード数や層が多いヤツからこの言葉が生まれた。</li>
+</ul>
+<div id="htmlwidget-560adc9a6f75339c0ba9" style="width:768px;height:576px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-560adc9a6f75339c0ba9">{"x":{"diagram":"\ndigraph {\n  rankdir = LR;\n  splines = false;\n  edge[style=invis];\n  ranksep = 1.4;\n  {\n    node [shape=circle, color=yellow, style = filled, fillcolor=yellow];\n    \"b[0]\" \"b[1]\" \"b[2]\";\n  }\n  {\n    node [shape=circle, color=chartreuse, style = filled, fillcolor=chartreuse];\n    \"x[0]\" \"x[1]\" \"x[2]\" \"x[3]\";\n  }\n  {\n    node [shape=circle, color=dodgerblue, style = filled, fillcolor=dodgerblue];\n    \"h1[0]\" \"h1[1]\" \"h1[2]\";\n    \"h2[0]\" \"h2[1]\" \"h2[2]\";\n  }\n  {\n    node [shape=circle, color=coral1, style=filled, fillcolor=coral1];\n    ŷ\n  }\n  { rank=same;\"b[0]\"->\"x[0]\"->\"x[1]\"->\"x[2]\"->\"x[3]\"}\n  { rank=same;\"b[1]\"->\"h1[0]\"->\"h1[1]\"->\"h1[2]\"}\n  { rank=same;\"b[2]\"->\"h2[0]\"->\"h2[1]\"->\"h2[2]\"}\n  \"b[0]\"->\"b[1]\"->\"b[2]\"\n  l0 [shape = plaintext, label = \"入力\"];\n  l0->\"b[0]\";\n  {rank=same; l0;\"b[0]\"}\n  l1 [shape = plaintext, label = \"隠れ層1\"];\n  l1->\"b[1]\";\n  {rank=same; l1;\"b[1]\"}\n  l2 [shape = plaintext, label = \"隠れ層2\"];\n  l2->\"b[2]\";\n  {rank=same; l2;\"b[2]\"}\n  l3 [shape = plaintext, label = \"出力\"];\n  l3->ŷ;\n  {rank=same; l3;ŷ}\n  edge[style=solid, tailport=e, headport=w];\n  {\"b[0]\"; \"x[0]\"; \"x[1]\"; \"x[2]\"; \"x[3]\"} -> {\"h1[0]\"; \"h1[1]\"; \"h1[2]\"}\n  {\"b[1]\"; \"h1[0]\"; \"h1[1]\"; \"h1[2]\"} ->  {\"h2[0]\"; \"h2[1]\"; \"h2[2]\"}\n  {\"b[2]\"; \"h2[0]\"; \"h2[1]\"; \"h2[2]\"} ->  ŷ;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</section></section>
+<section><section id="ニューラルネットワークのチューニング" class="titleslide slide level1"><h1>ニューラルネットワークのチューニング</h1></section><section id="テストデータ" class="slide level2">
+<h2>テストデータ</h2>
+<ul>
+<li><code>two_moons</code>データセットを用いて試してみる。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split
+<span class="im">from</span> sklearn.neural_network <span class="im">import</span> MLPClassifier
+<span class="im">from</span> sklearn.datasets <span class="im">import</span> make_moons
+X, y <span class="op">=</span> make_moons(n_samples<span class="op">=</span><span class="dv">100</span>, noise<span class="op">=</span>.<span class="dv">25</span>, random_state<span class="op">=</span><span class="dv">3</span>)
+X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(
+  X, y, stratify<span class="op">=</span>y, random_state<span class="op">=</span><span class="dv">42</span>
+)
+mlp <span class="op">=</span> MLPClassifier(solver<span class="op">=</span><span class="st">&#39;lbfgs&#39;</span>, random_state<span class="op">=</span><span class="dv">0</span>).fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill<span class="op">=</span><span class="va">True</span>, alpha<span class="op">=</span>.<span class="dv">3</span>)
+mglearn.discrete_scatter(X_train[:, <span class="dv">0</span>], X_train[:, <span class="dv">1</span>], y_train)
+plt.xlabel(<span class="st">&quot;特徴量0&quot;</span>)
+plt.ylabel(<span class="st">&quot;特徴量1&quot;</span>)</code></pre></div>
+</section><section class="slide level2">
+
+<p><img src="index_files/figure-revealjs/unnamed-chunk-8-1.png" width="768" style="display: block; margin: auto;" /></p>
+</section><section id="mlpのパラメータ---隠れ層のサイズ" class="slide level2">
+<h2>MLPのパラメータ - 隠れ層のサイズ</h2>
+<ul>
+<li>デフォルト: ノード数100の隠れ層が1層。</li>
+<li>小さなデータセットに対しては大きすぎる。</li>
+<li>とりあえず10に減らす。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">mlp <span class="op">=</span> MLPClassifier(solver<span class="op">=</span><span class="st">&#39;lbfgs&#39;</span>, random_state<span class="op">=</span><span class="dv">0</span>, hidden_layer_sizes<span class="op">=</span>[<span class="dv">10</span>])
+mlp.fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill<span class="op">=</span><span class="va">True</span>, alpha<span class="op">=</span>.<span class="dv">3</span>)
+mglearn.discrete_scatter(X_train[:, <span class="dv">0</span>], X_train[:, <span class="dv">1</span>], y_train)
+plt.xlabel(<span class="st">&quot;特徴量0&quot;</span>)
+plt.ylabel(<span class="st">&quot;特徴量1&quot;</span>)</code></pre></div>
+</section><section class="slide level2">
+
+<p><img src="index_files/figure-revealjs/unnamed-chunk-10-1.png" width="768" style="display: block; margin: auto;" /></p>
+</section><section id="境界がギザギザしてる" class="slide level2">
+<h2>境界がギザギザしてる…？</h2>
+<ul>
+<li>ノード数を減らした &amp; 活性化関数がReLUのため。</li>
+<li>隠れ層を増やす（10ノード×2層）とちょっと滑らかに。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="co"># 10ユニットの隠れ層を2つ使う</span>
+mlp <span class="op">=</span> MLPClassifier(solver<span class="op">=</span><span class="st">&#39;lbfgs&#39;</span>, random_state<span class="op">=</span><span class="dv">0</span>, hidden_layer_sizes<span class="op">=</span>[<span class="dv">10</span>, <span class="dv">10</span>])
+mlp.fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill<span class="op">=</span><span class="va">True</span>, alpha<span class="op">=</span>.<span class="dv">3</span>)
+mglearn.discrete_scatter(X_train[:, <span class="dv">0</span>], X_train[:, <span class="dv">1</span>], y_train)
+plt.xlabel(<span class="st">&quot;特徴量0&quot;</span>)
+plt.ylabel(<span class="st">&quot;特徴量1&quot;</span>)</code></pre></div>
+</section><section class="slide level2">
+
+<p><img src="index_files/figure-revealjs/unnamed-chunk-12-1.png" width="768" style="display: block; margin: auto;" /></p>
+</section><section id="もっと滑らかに" class="slide level2">
+<h2>もっと滑らかに</h2>
+<ul>
+<li>活性化関数をtanhにする。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="co"># 10ユニットの隠れ層を2つ使う+活性化関数にtanh</span>
+mlp <span class="op">=</span> MLPClassifier(solver<span class="op">=</span><span class="st">&#39;lbfgs&#39;</span>, activation<span class="op">=</span><span class="st">&#39;tanh&#39;</span>,
+                    random_state<span class="op">=</span><span class="dv">0</span>, hidden_layer_sizes<span class="op">=</span>[<span class="dv">10</span>, <span class="dv">10</span>])
+mlp.fit(X_train, y_train)
+mglearn.plots.plot_2d_separator(mlp, X_train, fill<span class="op">=</span><span class="va">True</span>, alpha<span class="op">=</span>.<span class="dv">3</span>)
+mglearn.discrete_scatter(X_train[:, <span class="dv">0</span>], X_train[:, <span class="dv">1</span>], y_train)
+plt.xlabel(<span class="st">&quot;特徴量0&quot;</span>)
+plt.ylabel(<span class="st">&quot;特徴量1&quot;</span>)</code></pre></div>
+</section><section class="slide level2">
+
+<p><img src="index_files/figure-revealjs/unnamed-chunk-14-1.png" width="768" style="display: block; margin: auto;" /></p>
+</section><section id="まだまだあるぞパラメータ" class="slide level2">
+<h2>まだまだあるぞパラメータ</h2>
+<ul>
+<li>L2正則化のパラメータがある
+<ul>
+<li>(デフォルトはめっちゃ弱い)</li>
+</ul></li>
+<li>ちょっといじってみる。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">8</span>))
+<span class="cf">for</span> axx, n_hidden_nodes <span class="kw">in</span> <span class="bu">zip</span>(axes, [<span class="dv">10</span>, <span class="dv">100</span>]):
+  <span class="cf">for</span> ax, alpha <span class="kw">in</span> <span class="bu">zip</span>(axx, [<span class="fl">0.0001</span>, <span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="dv">1</span>]):
+    mlp <span class="op">=</span> MLPClassifier(solver<span class="op">=</span><span class="st">&#39;lbfgs&#39;</span>, random_state<span class="op">=</span><span class="dv">0</span>,
+                        hidden_layer_sizes<span class="op">=</span>[n_hidden_nodes, n_hidden_nodes],
+                        alpha<span class="op">=</span>alpha)
+    mlp.fit(X_train, y_train)
+    mglearn.plots.plot_2d_separator(mlp, X_train, fill<span class="op">=</span><span class="va">True</span>, alpha<span class="op">=</span>.<span class="dv">3</span>, ax<span class="op">=</span>ax)
+    mglearn.discrete_scatter(X_train[:, <span class="dv">0</span>], X_train[:, <span class="dv">1</span>], y_train ,ax<span class="op">=</span>ax)
+    ax.set_title(<span class="st">&quot;隠れ層=[</span><span class="sc">{}</span><span class="st">, </span><span class="sc">{}</span><span class="st">]</span><span class="ch">\n</span><span class="st">alpha=</span><span class="sc">{:.4f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(
+                 n_hidden_nodes, n_hidden_nodes, alpha))</code></pre></div>
+</section><section class="slide level2">
+
+<p><img src="index_files/figure-revealjs/unnamed-chunk-16-1.png" width="1920" style="display: block; margin: auto;" /></p>
+</section><section id="他の影響要素" class="slide level2">
+<h2>他の影響要素</h2>
+<ul>
+<li>ニューラルネットワークでは重みの初期値を乱数で決める。</li>
+<li>ネットワークが小さいと乱数の影響が結構出る。</li>
+<li>乱数だけを変更して影響を観察する。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">8</span>))
+<span class="cf">for</span> i, ax <span class="kw">in</span> <span class="bu">enumerate</span>(axes.ravel()):
+  mlp <span class="op">=</span> MLPClassifier(solver<span class="op">=</span><span class="st">&#39;lbfgs&#39;</span>, random_state<span class="op">=</span>i,
+                      hidden_layer_sizes<span class="op">=</span>[<span class="dv">100</span>, <span class="dv">100</span>])
+  mlp.fit(X_train, y_train)
+  mglearn.plots.plot_2d_separator(mlp, X_train, fill<span class="op">=</span><span class="va">True</span>, alpha<span class="op">=</span>.<span class="dv">3</span>, ax<span class="op">=</span>ax)
+  mglearn.discrete_scatter(X_train[:, <span class="dv">0</span>], X_train[:, <span class="dv">1</span>], y_train, ax<span class="op">=</span>ax)</code></pre></div>
+</section><section class="slide level2">
+
+<p><img src="index_files/figure-revealjs/unnamed-chunk-18-1.png" width="1920" style="display: block; margin: auto;" /></p>
+</section><section id="実データに対するmlp" class="slide level2">
+<h2>実データに対するMLP</h2>
+<ul>
+<li>cancerを使う。</li>
+<li>cancerは特徴量のレンジが様々という特徴がある。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> sklearn.datasets <span class="im">import</span> load_breast_cancer
+cancer <span class="op">=</span> load_breast_cancer()
+<span class="bu">print</span>(cancer.data.<span class="bu">max</span>(axis<span class="op">=</span><span class="dv">0</span>)) <span class="co"># 各データセットの最大値</span>
+ <span class="co">## [2.811e+01 3.928e+01 1.885e+02 2.501e+03 1.634e-01 3.454e-01 4.268e-01</span>
+ <span class="co">##  2.012e-01 3.040e-01 9.744e-02 2.873e+00 4.885e+00 2.198e+01 5.422e+02</span>
+ <span class="co">##  3.113e-02 1.354e-01 3.960e-01 5.279e-02 7.895e-02 2.984e-02 3.604e+01</span>
+ <span class="co">##  4.954e+01 2.512e+02 4.254e+03 2.226e-01 1.058e+00 1.252e+00 2.910e-01</span>
+ <span class="co">##  6.638e-01 2.075e-01]</span></code></pre></div>
+</section><section id="cancerにmlpを適用する" class="slide level2">
+<h2>cancerにMLPを適用する</h2>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(
+  cancer.data, cancer.target, random_state<span class="op">=</span><span class="dv">0</span>
+)
+mlp <span class="op">=</span> MLPClassifier(random_state<span class="op">=</span><span class="dv">42</span>)
+mlp.fit(X_train, y_train)
+<span class="bu">print</span>(<span class="st">&quot;訓練セットの精度: </span><span class="sc">{:.2f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_train, y_train)))
+ <span class="co">## 訓練セットの精度: 0.91</span>
+<span class="bu">print</span>(<span class="st">&quot;テストセットの精度: </span><span class="sc">{:.2f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_test, y_test)))
+ <span class="co">## テストセットの精度: 0.88</span></code></pre></div>
+<ul>
+<li>悪くないけど何かイマイチ…？
+<ul>
+<li>MLPはSVMと同じようにスケールの影響を受ける。</li>
+<li>スケールを揃える必要がある。</li>
+<li>平均0、分散1がベスト。</li>
+</ul></li>
+</ul>
+</section><section id="cancerをスケーリングしてmlpを適用する" class="slide level2">
+<h2>cancerをスケーリングしてMLPを適用する</h2>
+<ul>
+<li>とりあえず今回は手作業(もっといい方法は後で)</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">mean_on_train <span class="op">=</span> X_train.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="co"># 各データセットの平均値</span>
+std_on_train <span class="op">=</span> X_train.std(axis<span class="op">=</span><span class="dv">0</span>) <span class="co"># 各データセットの標準偏差</span>
+<span class="co"># 平均を引いてスケーリングする</span>
+X_train_scaled <span class="op">=</span> (X_train <span class="op">-</span> mean_on_train) <span class="op">/</span> std_on_train
+X_test_scaled <span class="op">=</span> (X_test <span class="op">-</span> mean_on_train) <span class="op">/</span> std_on_train
+<span class="co"># MLPを適用</span>
+mlp <span class="op">=</span> MLPClassifier(random_state<span class="op">=</span><span class="dv">0</span>)
+mlp.fit(X_train_scaled, y_train)
+ <span class="co">## /Users/rito/myenv/lib/python3.6/site-packages/sklearn/neural_network/multilayer_perceptron.py:564: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (200) reached and the optimization hasn&#39;t converged yet.</span>
+ <span class="co">##   % self.max_iter, ConvergenceWarning)</span>
+<span class="bu">print</span>(<span class="st">&quot;訓練セットの精度: </span><span class="sc">{:.3f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_train_scaled, y_train)))
+ <span class="co">## 訓練セットの精度: 0.991</span>
+<span class="bu">print</span>(<span class="st">&quot;テストセットの精度: </span><span class="sc">{:.3f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_test_scaled, y_test)))
+ <span class="co">## テストセットの精度: 0.965</span></code></pre></div>
+<ul>
+<li>精度は上がったけど何か警告出てる…？</li>
+</ul>
+</section><section id="繰り返し数を増やす" class="slide level2">
+<h2>繰り返し数を増やす</h2>
+<ul>
+<li>MLPは試行の繰り返しで重みを最適化していく。</li>
+<li>繰り返し数はデフォルトで200が上限なので、これを増やす。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">mlp <span class="op">=</span> MLPClassifier(max_iter<span class="op">=</span><span class="dv">1000</span>, random_state<span class="op">=</span><span class="dv">0</span>)
+mlp.fit(X_train_scaled, y_train)
+<span class="bu">print</span>(<span class="st">&quot;訓練セットの精度: </span><span class="sc">{:.3f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_train_scaled, y_train)))
+ <span class="co">## 訓練セットの精度: 0.993</span>
+<span class="bu">print</span>(<span class="st">&quot;テストセットの精度: </span><span class="sc">{:.3f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_test_scaled, y_test)))
+ <span class="co">## テストセットの精度: 0.972</span></code></pre></div>
+<ul>
+<li>精度は上がったが、汎化性能にもう一声欲しい。</li>
+</ul>
+</section><section id="雑に正則化する" class="slide level2">
+<h2>雑に正則化する</h2>
+<ul>
+<li>とりあえずalphaを増やして強めの正則化をかける。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">mlp <span class="op">=</span> MLPClassifier(max_iter<span class="op">=</span><span class="dv">1000</span>, alpha<span class="op">=</span><span class="dv">1</span>, random_state<span class="op">=</span><span class="dv">0</span>)
+mlp.fit(X_train_scaled, y_train)
+<span class="bu">print</span>(<span class="st">&quot;訓練セットの精度: </span><span class="sc">{:.3f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_train_scaled, y_train)))
+ <span class="co">## 訓練セットの精度: 0.988</span>
+<span class="bu">print</span>(<span class="st">&quot;テストセットの精度: </span><span class="sc">{:.3f}</span><span class="st">&quot;</span>.<span class="bu">format</span>(mlp.score(X_test_scaled, y_test)))
+ <span class="co">## テストセットの精度: 0.972</span></code></pre></div>
+<ul>
+<li>こんな感じでチューニングをやっていく。</li>
+</ul>
+</section><section id="何がどうなっての" class="slide level2">
+<h2>何がどうなっての</h2>
+<ul>
+<li>ニューラルネットワークは決定木や線形モデルに比べると説明が難しい。</li>
+<li>どの特徴量がどうなってるのかよくわからん…</li>
+<li>隠れ層の重み行列を可視化すると多少は見当が付く可能性がある。</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python">plt.figure(figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">5</span>))
+plt.imshow(mlp.coefs_[<span class="dv">0</span>], interpolation<span class="op">=</span><span class="st">&#39;none&#39;</span>, cmap<span class="op">=</span><span class="st">&#39;viridis&#39;</span>)
+plt.yticks(<span class="bu">range</span>(<span class="dv">30</span>), cancer.feature_names)
+plt.xlabel(<span class="st">&quot;重み行列の列&quot;</span>)
+plt.ylabel(<span class="st">&quot;特徴量&quot;</span>)
+plt.colorbar()</code></pre></div>
+</section><section class="slide level2">
+
+<p><img src="index_files/figure-revealjs/unnamed-chunk-25-1.png" width="1920" style="display: block; margin: auto;" /></p>
+<ul>
+<li>全てのノードで重みが少ない特徴量は重要じゃないかも。
+<ul>
+<li>単にこのネットワークが利用しきれていないだけという可能性も…</li>
+</ul></li>
+</ul>
+</section><section id="もっと大規模にやりたい" class="slide level2">
+<h2>もっと大規模にやりたい</h2>
+<ul>
+<li>ディープラーニングに特化したライブラリを使おう。</li>
+<li>keras、lasagne、tensor-flow、theanoあたりが有名どころ。
+<ul>
+<li>theano、tensor-flow…ディープラーニングのライブラリ。</li>
+<li>keras、lasagne…theanoやtensor-flowを動かすライブラリ。
+<ul>
+<li>lasagneはラザーニェとか読むらしい。2015年くらいにKaggleで流行ってたとの情報があるが最近の記事がない。</li>
+</ul></li>
+</ul></li>
+</ul>
+</section></section>
+<section><section id="長所短所パラメータ" class="titleslide slide level1"><h1>長所、短所、パラメータ</h1></section><section id="ニューラルネットワークの長所短所" class="slide level2">
+<h2>ニューラルネットワークの長所短所</h2>
+<ul>
+<li>長所
+<ul>
+<li>大量のデータを使って驚く程複雑なモデルを構築できる</li>
+<li>時間とデータと十分なチューニングがあれば他のアルゴリズムを凌駕する可能性がある</li>
+</ul></li>
+<li>短所
+<ul>
+<li>訓練に時間がかかる</li>
+<li>特徴量間のスケールが違うと上手く動かない</li>
+<li>パラメータチューニングはそれ自体が職人芸</li>
+</ul></li>
+</ul>
+</section><section id="ニューラルネットワークのパラメータ" class="slide level2">
+<h2>ニューラルネットワークのパラメータ</h2>
+<ul>
+<li>最も重要なのは<strong>隠れ層の数</strong>と<strong>ノード数</strong>
+<ul>
+<li>層は1つか2つからはじめて増やしていく</li>
+<li>ノード数は入力と同じくらい(数千を超えることはあまり無い)</li>
+</ul></li>
+</ul>
+</section><section id="ネットワークの複雑さの捉え方" class="slide level2">
+<h2>ネットワークの複雑さの捉え方</h2>
+<ul>
+<li><strong>重みの数</strong>は一つの指標。
+<ul>
+<li>100の入力から100の出力を得るためには、10,000の重みを持つ行列が必要。</li>
+</ul></li>
+</ul>
+</section><section id="パラメータ調整の定石" class="slide level2">
+<h2>パラメータ調整の定石</h2>
+<ul>
+<li>大きめのネットワークで過学習させる
+<ul>
+<li>まずそもそも学習できるのかを確認</li>
+</ul></li>
+<li>ネットワークを小さくしたり正則化パラメータを調整して汎化性能を高める</li>
+</ul>
+</section><section id="モデル学習の方法" class="slide level2">
+<h2>モデル学習の方法</h2>
+<ul>
+<li>誤差を小さくするためのアルゴリズムも色々ある。
+<ul>
+<li>cf. <a href="http://ruder.io/optimizing-gradient-descent/index.html#visualizationofalgorithms">An overview of gradient descent optimization algorithms</a></li>
+</ul></li>
+<li>初心者は<code>adam</code>か<code>lbfgs</code>を使っておこう。</li>
+</ul>
+</section><section id="fitはモデルをリセットする" class="slide level2">
+<h2>fitはモデルをリセットする…？</h2>
+<ul>
+<li>デフォルトでは<code>fit</code>呼び出しの度に重みはリセットされる。</li>
+<li><code>MLPClassifier</code>呼び出し時に<code>warm_start=True</code>を指定すると前回の学習を引き継げるようになる。
+<ul>
+<li>cf. <a href="https://spjai.com/neural-network-parameter/">ニューラルネットワークのパラメータ設定方法(scikit-learnのMLPClassifier)</a></li>
+</ul></li>
+</ul>
+</section></section>
+    </div>
+  </div>
+
+  <script src="index_files/reveal.js-3.3.0.1/lib/js/head.min.js"></script>
+  <script src="index_files/reveal.js-3.3.0.1/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Vertical centering of slides
+        center: false,
+        // Transition style
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+        // Transition style for full page slide backgrounds
+        backgroundTransition: 'default', // none/fade/slide/convex/concave/zoom
+
+
+
+        chalkboard: {
+        },
+
+        keyboard: {
+          67: function() { RevealChalkboard.toggleNotesCanvas() },    // toggle notes canvas when 'c' is pressed
+          66: function() { RevealChalkboard.toggleChalkboard() }, // toggle chalkboard when 'b' is pressed
+          46: function() { RevealChalkboard.clear() },    // clear chalkboard when 'DEL' is pressed
+           8: function() { RevealChalkboard.reset() },    // reset chalkboard data on current slide when 'BACKSPACE' is pressed
+          68: function() { RevealChalkboard.download() }, // downlad recorded chalkboard drawing when 'd' is pressed
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'index_files/reveal.js-3.3.0.1/plugin/chalkboard/chalkboard.js', async: true },
+        ]
+      });
+    </script>
+  <!-- dynamically load mathjax for compatibility with self-contained -->
+  <script>
+    (function () {
+      var script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+      document.getElementsByTagName("head")[0].appendChild(script);
+    })();
+  </script>
+
+<script>
+  (function() {
+    if (window.jQuery) {
+      Reveal.addEventListener( 'slidechanged', function(event) {  
+        window.jQuery(event.previousSlide).trigger('hidden');
+        window.jQuery(event.currentSlide).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+
+  </body>
+</html>
