@@ -1,0 +1,26 @@
+---
+title: "2.3.8 ニューラルネットワーク"
+author: '@nozma'
+date: "2018/4/12"
+output:
+  revealjs::revealjs_presentation:
+    pandoc_args: [
+      '--from', 'markdown+autolink_bare_uris+tex_math_single_backslash-implicit_figures'
+    ]
+    theme: white
+    transition: fade
+    center: false
+    progress: true
+    css: "for_reveal.css"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# intro
+
+## はじめに
+
+- hoge
+- fuga
