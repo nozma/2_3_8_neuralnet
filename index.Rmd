@@ -1,6 +1,5 @@
 ---
 title: "2.3.8 ニューラルネットワーク"
-author: '@nozma'
 date: "2018/4/12"
 output:
   revealjs::revealjs_presentation:
